@@ -2,6 +2,7 @@
 # 记忆存储，多轮对话
 # 现已不再支持，memory类型：ConversationBufferMemory、ConversationBufferWindowMemory、ConversationSummaryMemory、ConversationSummaryBufferMemory
 # 1.2.x版本langchain建议使用 RunnableWithMessageHistory
+# 扩展：使用 Redis 存储历史
 
 import os
 from dotenv import load_dotenv
@@ -60,7 +61,7 @@ print(response1.content)
 print("======="*5)
 # 第二轮对话（自动包含历史）
 response2 = chain_with_history.invoke(
-    {"input": "美国成立多少年了？"},
+    {"input": "美国成立多少年了？直接给答案即可。"},
     config={"configurable": {"session_id": session_id}}
 )
 print(response2.content)  # 会记得名字是"小明"
@@ -71,3 +72,11 @@ response3 = chain_with_history.invoke(
     config={"configurable": {"session_id": session_id}}
 )
 print(response3.content)  # 会记得名字是"小明"
+
+print("++++++++++++"*5)
+# 检查内部存储的历史
+print("\n--- 存储的内部历史 ---")
+for message in store[session_id].messages:
+    print(type(message))
+    print(message)
+    print("++++++++++++" * 5)
