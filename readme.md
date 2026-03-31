@@ -3,7 +3,9 @@
 > 记录学习AI的过程
 
 ## 学习资源
-> - [吴恩达-B站学习视频-langchain学习](https://www.bilibili.com/video/BV1umnbziE97?spm_id_from=333.788.player.switch&vd_source=f78f55acb17c0575d3ac400592e9fbd5&p=2)
+> - [吴恩达-B站-langchain学习](https://www.bilibili.com/video/BV1umnbziE97?spm_id_from=333.788.player.switch&vd_source=f78f55acb17c0575d3ac400592e9fbd5&p=2)
+> - [柏汌-B站-rag基础教程](https://www.bilibili.com/video/BV1qiiTBBEuX/?p=3&spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=f78f55acb17c0575d3ac400592e9fbd5)
+> - [github-rag学习文档](https://github.com/datawhalechina/all-in-rag?tab=readme-ov-file)
 
 ## 版本更新
 ### 20260323
@@ -24,3 +26,9 @@
         >> 测试效果：使用langchain调用，效果不稳定；使用ollama调用效果较好； 
 ### 20260329
     > 个人AI项目实战：日志分析助手_进阶版
+### 20260330
+    > 寻找合适教程，目标学习rag的概念，理解向量，最后进行实战
+    > 学习策略：B站视频 + github文档，双线并行
+### 20260331
+    > 了解rag的概念、工作流程；了解文档分块(代码还需实际测试)；了解向量；
+    > 使用conda搭建python 3.12.7虚拟环境(搭建流程待整理)
