@@ -11,11 +11,12 @@
 # 用来加载模型,并使用模型生成向量
 from sentence_transformers import SentenceTransformer
 
-model_path = r"E:\LLM\local_model\BAAI\bge-large-zh-v1___5"  # 替换为实际路径
+# model_path = r"E:\LLM\local_model\BAAI\bge-large-zh-v1___5"  # 替换为实际路径
+model_path = r"/Users/htf/PycharmProjects/ysEnvPro/llm_model_file/BAAI/bge-large-zh-v1___5"  # 替换为实际路径
 model = SentenceTransformer(model_path)
 
 sentences = [
-    "苹果",  # "梨", "汽车"
+    "我国开展舱外辐射生物学暴露实验",  # "梨", "汽车"
 ]
 
 # 生成向量（默认返回numpy数组）
