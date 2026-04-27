@@ -24,8 +24,8 @@ def l2_distance(a, b):
     return norm(x)
 
 
-# model_path = r"E:\LLM\local_model\BAAI\bge-large-zh-v1___5"  # 替换为实际路径
-model_path = r"/Users/htf/PycharmProjects/ysEnvPro/llm_model_file/BAAI/bge-large-zh-v1___5"  # 替换为实际路径
+model_path = r"E:\LLM\local_model\BAAI\bge-large-zh-v1___5"  # 替换为实际路径
+# model_path = r"/Users/htf/PycharmProjects/ysEnvPro/llm_model_file/BAAI/bge-large-zh-v1___5"  # 替换为实际路径
 local_model = SentenceTransformer(model_path)
 
 

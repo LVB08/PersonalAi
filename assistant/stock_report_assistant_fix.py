@@ -6,11 +6,12 @@
 """
 
 import os
+import json
 
 from tools.get_stock_price import get_stock_price
 from tools.calculate_tool import calculate_growth_rate
 from tools.rag_tool import search_vector_db
-from prompt_template import cus_prompt, react_system_prompt
+from prompt_template import cus_prompt, system_prompt_react
 
 from langchain_openai import ChatOpenAI
 from langchain_core.chat_history import BaseChatMessageHistory
@@ -26,13 +27,11 @@ class StockReportAssistant:
         "search_vector_db": search_vector_db,
         "get_stock_price": get_stock_price
     }
+    max_try_num = 5
 
-    def __init__(self):
-        self.store = {}
-        self.prompt = cus_prompt
-        self.tools = [calculate_growth_rate, search_vector_db, get_stock_price]
+    def __init__(self, query):
+        self.query = query
         self.llm = self.start_load_model()
-        self.agent = self.create_agent()
         self.run()
 
     def start_load_model(self):
@@ -46,58 +45,60 @@ class StockReportAssistant:
         )  # temperature=0 让输出更稳定
         return llm
 
-    def get_session_history(self, session_id: str) -> BaseChatMessageHistory:
-        """根据session_id获取会话历史"""
-        if session_id not in self.store:
-            self.store[session_id] = ChatMessageHistory()
-        return self.store[session_id]
-
-    def create_agent(self):
-        """创建agent"""
-        agent = create_agent(
-            model=self.llm,
-            tools=self.tools,
-            system_prompt=react_system_prompt
-        )
-
-        agent_with_memory = RunnableWithMessageHistory(
-            agent,
-            self.get_session_history,
-            input_messages_key="input",
-            # history_messages_key="chat_history",
-        )
-
-        return agent_with_memory
-
-    def build_chain(self):
-        # 创建基础链
-        basechain = self.prompt | self.llm
-        # 包装成带记忆的链
-        chain_with_history = RunnableWithMessageHistory(
-            runnable=basechain,
-            get_session_history=self.get_session_history,
-            input_messages_key="input",  # 输入消息的键名
-            history_messages_key="chat_history"  # 历史消息的键名
-        )
-        return chain_with_history
-
     def run(self):
         """运行主函数"""
-        response = self.agent.invoke(
-            {"input": "华为的股价是多少"},
-            config={"configurable": {"session_id": "new_seesion"}}
-        )
-        print(response)
-        # print(f"🤖 AI: {response['messages'][-1].content}")
+        messages = [
+            {"role": "system", "content": system_prompt_react},
+            {"role": "user", "content": self.query}
+        ]
+        print(f"======用户提问: {self.query}======")
+        for i in range(self.max_try_num):
+            print(f"---------------第{i}轮开始---------------")
+            ai_mes = self.llm.invoke(messages).content
+            messages.append({"role": "assistant", "content": ai_mes})
+            print(f"🤖 AI: {ai_mes}")
 
-        response = self.chain.invoke(
-            {"input": "华为的股价是多少"},
-            config={"configurable": {"session_id": self.tmp_session_id}}
-        )
-        print(f"\n[助手] 分析结果: {response}")
+            if "Action:" in ai_mes and "Action Input:" in ai_mes:
+                action_line = ai_mes.split("Action:")[1].split("Action Input:")[0].strip()
+                input_line = ai_mes.split("Action Input:")[1].strip()
+                tool_name = action_line.strip()
+                try:
+                    tool_args = json.loads(input_line)
+                except:
+                    tool_args = {}
+
+                if tool_name in self.tools_registry:
+                    arg_val = list(tool_args.values())[0] if tool_args else ""
+                    observation = self.tools_registry[tool_name].invoke(arg_val)
+                    print(f"🛠️ 工具执行结果: {observation}")
+
+                    # 将观察结果加入对话历史，形成闭环
+                    messages.append({"role": "user", "content": f"Observation: {observation}"})
+                else:
+                    messages.append({"role": "user", "content": "Observation: 工具不存在"})
+            else:
+                # 如果没有 Action，说明任务完成
+                print(f"✅ 最终回答: {ai_mes}")
+                break
+            print(f"---------------第{i}轮结束---------------")
 
 
 if __name__ == "__main__":
-    StockReportAssistant()
+    # query = "小米的财务情况？"
+    # StockReportAssistant(query)
 
+    print("=== 助手 CLI 模式 ===")
+    print("输入 'exit' 或 'quit' 退出程序。")
+    while True:
+        try:
+            user_input = input("\n[用户] 请提问: ").strip()  # 获取用户输入
+            if user_input.lower() in ['exit', 'quit', 'q', '退出']:  # 退出逻辑
+                print("再见！")
+                break
+            StockReportAssistant(user_input)
+        except KeyboardInterrupt:
+            print("\n\n检测到退出指令，再见！")
+            break
+        except Exception as e:
+            print(f"\n[错误] 发生未知错误: {e}")
 

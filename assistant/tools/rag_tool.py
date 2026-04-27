@@ -13,6 +13,10 @@ import chromadb
 from config import CHROMADA_DATA_PATH, TEXT_MODEL_PATH, VECTOR_DB_NAME
 from sentence_transformers import SentenceTransformer
 
+import numpy as np
+from numpy import dot
+from numpy.linalg import norm
+
 
 load_dotenv()
 local_text_model = SentenceTransformer(TEXT_MODEL_PATH)
@@ -39,7 +43,7 @@ def extract_text_from_pdf(filename, page_numbers=None):
 
 class MyVectorDB:
 
-    def __init__(self, collection_name, n_results=2):
+    def __init__(self, collection_name, n_results=5):
         client = chromadb.PersistentClient(path=CHROMADA_DATA_PATH)
         self.collection = client.get_or_create_collection(name=collection_name)
         self.n_results = n_results
@@ -58,13 +62,23 @@ class MyVectorDB:
         )
 
     def search(self, query):
-        """检索向量数据库"""
+        """检索向量数据库，并使用欧式距离判断相似度"""
+        query_vec = self.get_embeddings_local([query])
         results = self.collection.query(
-            query_embeddings=self.get_embeddings_local([query]),
+            query_embeddings=query_vec,
             n_results=self.n_results
         )
+        l2_distance_list = results.get("distances", [[]])[0]
+        doc_str = "本地文档库中没有相关信息！"
+        for i in range(len(l2_distance_list)):
+            if l2_distance_list[i] < 0.2:
+                print(f"欧式距离: {l2_distance_list[i]}; rag文档库，成功命中！")
+                doc_str = results["documents"][0][i]
+                break
+        return doc_str
         # return results
-        return "\n\n".join([doc for doc in results["documents"][0]])
+        # return "\n\n".join([doc for doc in results["documents"][0]])
+
 
 
 def text_vector(doc_path):
@@ -87,5 +101,8 @@ if __name__ == '__main__':
     vector_db = MyVectorDB(VECTOR_DB_NAME)
     # print(vector_db.search("小米核心财务指标？"))
     # print(search_vector_db.invoke("请对比小米公司和华为公司2024年的营收增长情况。"))
-    print(search_vector_db.invoke("小米公司2024年营收情况"))
+    # print(search_vector_db.invoke("小米公司2024年营收情况"))
+
+    print(search_vector_db.invoke("华为的股价是多少"))
+
 
